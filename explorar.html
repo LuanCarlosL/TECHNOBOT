@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="pt-BR">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modo Explorar - Robótica</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100%;
+      overflow-x: hidden;
+    }
+
+    html {
+      height: 100%;
+    }
+
+    .container {
+      padding: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .title {
+      font-size: 3rem;
+      font-weight: bold;
+      color: #ffffff;
+      margin: 0 0 0.5rem 0;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .subtitle {
+      font-size: 1.2rem;
+      color: #e0e7ff;
+      margin: 0;
+    }
+
+    .section {
+      margin-bottom: 4rem;
+    }
+
+    .section-title {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #ffffff;
+      text-align: center;
+      margin: 0 0 2rem 0;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+    }
+
+    .card-icon {
+      font-size: 4rem;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .card-title {
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: #1f2937;
+      margin: 0 0 0.5rem 0;
+      text-align: center;
+    }
+
+    .card-description {
+      color: #6b7280;
+      text-align: center;
+      margin: 0 0 1rem 0;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .card-badge {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: #667eea;
+      color: white;
+      padding: 0.3rem 0.8rem;
+      border-radius: 15px;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+
+    .tutorial-badge {
+      background: #10b981;
+    }
+
+    .project-badge {
+      background: #f59e0b;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .difficulty {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.9rem;
+      color: #6b7280;
+    }
+
+    .difficulty-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #d1d5db;
+    }
+
+    .difficulty-dot.filled {
+      background: #667eea;
+    }
+
+    .back-button {
+      display: block;
+      margin: 2rem auto 0;
+      padding: 1rem 3rem;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 2px solid white;
+      border-radius: 50px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .back-button:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 768px) {
+      .title {
+        font-size: 2rem;
+      }
+
+      .section-title {
+        font-size: 1.5rem;
+      }
+
+      .cards-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+
+      .container {
+        padding: 1rem;
+      }
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body>
+  <div class="container">
+   <header class="header">
+    <h1 class="title" id="title">Modo Explorar</h1>
+    <p class="subtitle" id="subtitle">Descubra o mundo da robótica através de tutoriais e projetos incríveis!</p>
+   </header>
+   <section class="section">
+    <h2 class="section-title" id="tutorialsTitle">📚 Tutoriais de Robótica</h2>
+    <div class="cards-grid" id="tutorialsGrid"></div>
+   </section>
+   <section class="section">
+    <h2 class="section-title" id="projectsTitle">🚀 Descubra Projetos</h2>
+    <div class="cards-grid" id="projectsGrid"></div>
+   </section><button class="back-button" id="backButton">⬅️ Voltar ao Menu</button>
+  </div>
+  <script>
+    const defaultConfig = {
+      title_text: "Modo Explorar",
+      subtitle_text: "Descubra o mundo da robótica através de tutoriais e projetos incríveis!",
+      tutorials_title: "📚 Tutoriais de Robótica",
+      projects_title: "🚀 Descubra Projetos",
+      back_button_text: "⬅️ Voltar ao Menu",
+      font_family: "Segoe UI",
+      font_size: 16
+    };
+
+    const tutorials = [
+      {
+        id: 1,
+        icon: "🤖",
+        title: "Fundamentos da Robótica",
+        description: "Aprenda os conceitos básicos, história e aplicações da robótica moderna",
+        difficulty: 1,
+        type: "tutorial"
+      },
+      {
+        id: 2,
+        icon: "⚡",
+        title: "Eletrônica Básica",
+        description: "Entenda circuitos, resistores, LEDs e componentes eletrônicos essenciais",
+        difficulty: 2,
+        type: "tutorial"
+      },
+      {
+        id: 3,
+        icon: "🔧",
+        title: "Sensores e Atuadores",
+        description: "Descubra como robôs percebem o ambiente e executam ações",
+        difficulty: 2,
+        type: "tutorial"
+      },
+      {
+        id: 4,
+        icon: "💻",
+        title: "Programação para Robôs",
+        description: "Domine linguagens de programação aplicadas à robótica",
+        difficulty: 3,
+        type: "tutorial"
+      },
+      {
+        id: 5,
+        icon: "🧠",
+        title: "Inteligência Artificial",
+        description: "Explore machine learning e IA aplicados à robótica",
+        difficulty: 3,
+        type: "tutorial"
+      },
+      {
+        id: 6,
+        icon: "🎯",
+        title: "Controle e Navegação",
+        description: "Técnicas avançadas de movimento e navegação autônoma",
+        difficulty: 3,
+        type: "tutorial"
+      }
+    ];
+
+    const projects = [
+      {
+        id: 1,
+        icon: "🚗",
+        title: "Carrinho Seguidor de Linha",
+        description: "Construa um robô que segue linhas usando sensores infravermelhos",
+        difficulty: 2,
+        type: "project"
+      },
+      {
+        id: 2,
+        icon: "🏠",
+        title: "Sistema de Segurança",
+        description: "Crie um sistema de alarme com sensores de movimento e câmera",
+        difficulty: 3,
+        type: "project"
+      },
+      {
+        id: 3,
+        icon: "🌱",
+        title: "Jardim Inteligente",
+        description: "Automatize a irrigação com sensores de umidade e temperatura",
+        difficulty: 2,
+        type: "project"
+      },
+      {
+        id: 4,
+        icon: "🎮",
+        title: "Braço Robótico",
+        description: "Monte um braço robótico controlado por joystick ou smartphone",
+        difficulty: 3,
+        type: "project"
+      },
+      {
+        id: 5,
+        icon: "🐕",
+        title: "Pet Robot",
+        description: "Desenvolva um robô de estimação que responde a comandos",
+        difficulty: 2,
+        type: "project"
+      },
+      {
+        id: 6,
+        icon: "🌟",
+        title: "Drone Autônomo",
+        description: "Construa um drone com navegação GPS e evitamento de obstáculos",
+        difficulty: 3,
+        type: "project"
+      }
+    ];
+
+    function createDifficultyIndicator(level) {
+      const dots = Array.from({length: 3}, (_, i) => {
+        const filled = i < level ? 'filled' : '';
+        return `<div class="difficulty-dot ${filled}"></div>`;
+      }).join('');
+      
+      const labels = ['Fácil', 'Médio', 'Difícil'];
+      return `
+        <div class="difficulty">
+          <span>Nível:</span>
+          <div style="display: flex; gap: 0.3rem;">${dots}</div>
+          <span>${labels[level - 1]}</span>
+        </div>
+      `;
+    }
+
+    function renderCards(items, containerId) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+
+      items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.onclick = () => {
+          const message = item.type === 'tutorial' 
+            ? `Abrindo tutorial: ${item.title}`
+            : `Explorando projeto: ${item.title}`;
+          
+          // Create custom modal instead of alert
+          showCustomMessage(message);
+        };
+
+        const badgeClass = item.type === 'tutorial' ? 'tutorial-badge' : 'project-badge';
+        const badgeText = item.type === 'tutorial' ? 'Tutorial' : 'Projeto';
+
+        card.innerHTML = `
+          <div class="card-badge ${badgeClass}">${badgeText}</div>
+          <div class="card-icon">${item.icon}</div>
+          <h3 class="card-title">${item.title}</h3>
+          <p class="card-description">${item.description}</p>
+          <div class="card-footer">
+            ${createDifficultyIndicator(item.difficulty)}
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    function showCustomMessage(message) {
+      // Create a custom toast message instead of alert
+      const toast = document.createElement('div');
+      toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(0,0,0,0.8);
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 10px;
+        z-index: 1000;
+        font-weight: bold;
+        backdrop-filter: blur(10px);
+        animation: slideIn 0.3s ease;
+      `;
+      toast.textContent = message;
+      
+      // Add animation keyframes
+      if (!document.querySelector('#toast-styles')) {
+        const style = document.createElement('style');
+        style.id = 'toast-styles';
+        style.textContent = `
+          @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+      
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.remove();
+      }, 3000);
+    }
+
+    async function onConfigChange(config) {
+      const titleElement = document.getElementById('title');
+      const subtitleElement = document.getElementById('subtitle');
+      const tutorialsTitleElement = document.getElementById('tutorialsTitle');
+      const projectsTitleElement = document.getElementById('projectsTitle');
+      const backButtonElement = document.getElementById('backButton');
+
+      titleElement.textContent = config.title_text || defaultConfig.title_text;
+      subtitleElement.textContent = config.subtitle_text || defaultConfig.subtitle_text;
+      tutorialsTitleElement.textContent = config.tutorials_title || defaultConfig.tutorials_title;
+      projectsTitleElement.textContent = config.projects_title || defaultConfig.projects_title;
+      backButtonElement.textContent = config.back_button_text || defaultConfig.back_button_text;
+
+      const customFont = config.font_family || defaultConfig.font_family;
+      const baseFontStack = 'Tahoma, Geneva, Verdana, sans-serif';
+      const fontFamily = `${customFont}, ${baseFontStack}`;
+      
+      document.body.style.fontFamily = fontFamily;
+
+      const baseSize = config.font_size || defaultConfig.font_size;
+      titleElement.style.fontSize = `${baseSize * 1.875}px`;
+      subtitleElement.style.fontSize = `${baseSize * 0.75}px`;
+      tutorialsTitleElement.style.fontSize = `${baseSize * 1.25}px`;
+      projectsTitleElement.style.fontSize = `${baseSize * 1.25}px`;
+      backButtonElement.style.fontSize = `${baseSize * 0.6875}px`;
+
+      const cardTitles = document.querySelectorAll('.card-title');
+      const cardDescriptions = document.querySelectorAll('.card-description');
+      
+      cardTitles.forEach(el => {
+        el.style.fontSize = `${baseSize * 0.875}px`;
+      });
+      
+      cardDescriptions.forEach(el => {
+        el.style.fontSize = `${baseSize * 0.59375}px`;
+      });
+    }
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities: (config) => ({
+          recolorables: [],
+          borderables: [],
+          fontEditable: {
+            get: () => config.font_family || defaultConfig.font_family,
+            set: (value) => {
+              config.font_family = value;
+              window.elementSdk.setConfig({ font_family: value });
+            }
+          },
+          fontSizeable: {
+            get: () => config.font_size || defaultConfig.font_size,
+            set: (value) => {
+              config.font_size = value;
+              window.elementSdk.setConfig({ font_size: value });
+            }
+          }
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ["title_text", config.title_text || defaultConfig.title_text],
+          ["subtitle_text", config.subtitle_text || defaultConfig.subtitle_text],
+          ["tutorials_title", config.tutorials_title || defaultConfig.tutorials_title],
+          ["projects_title", config.projects_title || defaultConfig.projects_title],
+          ["back_button_text", config.back_button_text || defaultConfig.back_button_text]
+        ])
+      });
+    }
+
+    // Initialize the page
+    renderCards(tutorials, 'tutorialsGrid');
+    renderCards(projects, 'projectsGrid');
+
+    document.getElementById('backButton').addEventListener('click', () => {
+      showCustomMessage('Voltando ao menu principal...');
+    });
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99a85a1117616f91',t:'MTc2MjQ3MTU0NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

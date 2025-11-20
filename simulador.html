@@ -1,0 +1,891 @@
+<!doctype html>
+<html lang="pt-BR">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador de Robótica</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100%;
+      overflow-x: hidden;
+    }
+
+    html {
+      height: 100%;
+    }
+
+    .container {
+      padding: 1rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .title {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #ffffff;
+      margin: 0 0 0.5rem 0;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      color: #e0e7ff;
+      margin: 0;
+    }
+
+    .simulator-layout {
+      display: grid;
+      grid-template-columns: 1fr 400px 300px;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .arena-container {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 15px;
+      padding: 1.5rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
+
+    .arena {
+      width: 100%;
+      height: 400px;
+      border: 3px solid #374151;
+      background: #f3f4f6;
+      position: relative;
+      cursor: crosshair;
+      background-image: 
+        linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    .robot {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      background: #ef4444;
+      border-radius: 50%;
+      border: 3px solid #dc2626;
+      transition: all 0.3s ease;
+      z-index: 10;
+    }
+
+    .robot::before {
+      content: '';
+      position: absolute;
+      top: -3px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-bottom: 12px solid #dc2626;
+    }
+
+    .obstacle {
+      position: absolute;
+      cursor: pointer;
+    }
+
+    .obstacle.wall {
+      background: #6b7280;
+      border: 2px solid #374151;
+    }
+
+    .obstacle.box {
+      background: #d97706;
+      border: 2px solid #92400e;
+    }
+
+    .obstacle.cylinder {
+      background: #059669;
+      border: 2px solid #047857;
+      border-radius: 50%;
+    }
+
+    .obstacle.ramp {
+      background: #7c3aed;
+      border: 2px solid #5b21b6;
+      clip-path: polygon(0 100%, 100% 100%, 100% 0);
+    }
+
+    .obstacle.line-straight {
+      background: #1f2937;
+      border: 2px solid #000000;
+      position: relative;
+    }
+
+    .obstacle.line-straight::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 10%;
+      right: 10%;
+      height: 4px;
+      background: #ffffff;
+      transform: translateY(-50%);
+    }
+
+    .obstacle.line-curve {
+      background: #1f2937;
+      border: 2px solid #000000;
+      border-radius: 0 50px 0 0;
+      position: relative;
+    }
+
+    .obstacle.line-curve::after {
+      content: '';
+      position: absolute;
+      top: 10%;
+      left: 10%;
+      right: 10%;
+      bottom: 10%;
+      border: 4px solid #ffffff;
+      border-radius: 0 40px 0 0;
+      border-left: none;
+      border-bottom: none;
+    }
+
+    .obstacle.line-t {
+      background: #1f2937;
+      border: 2px solid #000000;
+      position: relative;
+    }
+
+    .obstacle.line-t::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 10%;
+      right: 10%;
+      height: 4px;
+      background: #ffffff;
+      transform: translateY(-50%);
+    }
+
+    .obstacle.line-t::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 10%;
+      bottom: 50%;
+      width: 4px;
+      background: #ffffff;
+      transform: translateX(-50%);
+    }
+
+    .obstacle.line-cross {
+      background: #1f2937;
+      border: 2px solid #000000;
+      position: relative;
+    }
+
+    .obstacle.line-cross::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 10%;
+      right: 10%;
+      height: 4px;
+      background: #ffffff;
+      transform: translateY(-50%);
+    }
+
+    .obstacle.line-cross::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 10%;
+      bottom: 10%;
+      width: 4px;
+      background: #ffffff;
+      transform: translateX(-50%);
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 15px;
+      padding: 1.5rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
+
+    .panel-title {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #1f2937;
+      margin: 0 0 1rem 0;
+      text-align: center;
+    }
+
+    .obstacles-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+      margin-bottom: 1rem;
+    }
+
+    .obstacle-btn {
+      padding: 0.8rem;
+      border: 2px solid #d1d5db;
+      border-radius: 10px;
+      background: #f9fafb;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.3s ease;
+      font-size: 0.9rem;
+    }
+
+    .obstacle-btn:hover {
+      border-color: #667eea;
+      background: #eff6ff;
+    }
+
+    .obstacle-btn.selected {
+      border-color: #667eea;
+      background: #dbeafe;
+    }
+
+    .robot-types {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      margin-bottom: 1rem;
+    }
+
+    .robot-btn {
+      padding: 0.8rem;
+      border: 2px solid #d1d5db;
+      border-radius: 10px;
+      background: #f9fafb;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.3s ease;
+      font-size: 0.9rem;
+    }
+
+    .robot-btn:hover {
+      border-color: #667eea;
+      background: #eff6ff;
+    }
+
+    .robot-btn.selected {
+      border-color: #667eea;
+      background: #dbeafe;
+    }
+
+    .code-editor {
+      width: 100%;
+      height: 120px;
+      border: 2px solid #d1d5db;
+      border-radius: 8px;
+      padding: 0.8rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      resize: vertical;
+      margin-bottom: 1rem;
+    }
+
+    .action-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.4rem;
+      margin-bottom: 1rem;
+    }
+
+    .action-btn {
+      padding: 0.5rem;
+      border: none;
+      border-radius: 8px;
+      background: #667eea;
+      color: white;
+      cursor: pointer;
+      font-size: 0.7rem;
+      font-weight: bold;
+      transition: background 0.3s ease;
+    }
+
+    .action-btn:hover {
+      background: #5a67d8;
+    }
+
+    .control-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    .control-btn {
+      padding: 0.8rem;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .execute-btn {
+      background: #10b981;
+      color: white;
+    }
+
+    .execute-btn:hover {
+      background: #059669;
+    }
+
+    .clear-btn {
+      background: #f59e0b;
+      color: white;
+    }
+
+    .clear-btn:hover {
+      background: #d97706;
+    }
+
+    .reset-btn {
+      background: #ef4444;
+      color: white;
+    }
+
+    .reset-btn:hover {
+      background: #dc2626;
+    }
+
+    .back-button {
+      display: block;
+      margin: 2rem auto 0;
+      padding: 1rem 3rem;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 2px solid white;
+      border-radius: 50px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .back-button:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 1200px) {
+      .simulator-layout {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .title {
+        font-size: 2rem;
+      }
+
+      .arena {
+        height: 300px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 0.5rem;
+      }
+
+      .obstacles-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .action-buttons {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body>
+  <div class="container">
+   <header class="header">
+    <h1 class="title" id="title">Simulador de Robótica</h1>
+    <p class="subtitle" id="subtitle">Monte, programe e teste seu robô na arena virtual!</p>
+   </header>
+   <div class="simulator-layout"><!-- Arena -->
+    <div class="arena-container">
+     <div class="arena" id="arena">
+      <div class="robot" id="robot" style="left: 50px; top: 50px;"></div>
+     </div>
+    </div><!-- Obstáculos e Robô -->
+    <div class="panel">
+     <h3 class="panel-title" id="obstaclesTitle">🧱 Obstáculos</h3>
+     <div class="obstacles-grid">
+      <div class="obstacle-btn" data-type="wall">
+       <div>
+        🧱
+       </div>
+       <div>
+        Parede
+       </div>
+      </div>
+      <div class="obstacle-btn" data-type="box">
+       <div>
+        📦
+       </div>
+       <div>
+        Caixa
+       </div>
+      </div>
+      <div class="obstacle-btn" data-type="cylinder">
+       <div>
+        🛢️
+       </div>
+       <div>
+        Cilindro
+       </div>
+      </div>
+      <div class="obstacle-btn" data-type="ramp">
+       <div>
+        📐
+       </div>
+       <div>
+        Rampa
+       </div>
+      </div>
+      <div class="obstacle-btn" data-type="line-straight">
+       <div>
+        ➖
+       </div>
+       <div>
+        Linha Reta
+       </div>
+      </div>
+      <div class="obstacle-btn" data-type="line-curve">
+       <div>
+        ↗️
+       </div>
+       <div>
+        Curva 90°
+       </div>
+      </div>
+      <div class="obstacle-btn" data-type="line-t">
+       <div>
+        ⊤
+       </div>
+       <div>
+        Junção T
+       </div>
+      </div>
+      <div class="obstacle-btn" data-type="line-cross">
+       <div>
+        ✚
+       </div>
+       <div>
+        Cruzamento
+       </div>
+      </div>
+     </div><button class="control-btn clear-btn" onclick="clearObstacles()">🗑️ Limpar Arena</button>
+     <h3 class="panel-title" id="robotTitle" style="margin-top: 2rem;">🤖 Robô</h3>
+     <div class="robot-types">
+      <div class="robot-btn selected" data-robot="basic">
+       <div>
+        🤖 Robô Básico
+       </div><small>Movimento simples</small>
+      </div>
+      <div class="robot-btn" data-robot="line-follower">
+       <div>
+        🛤️ Seguidor de Linha
+       </div><small>Segue linhas brancas</small>
+      </div>
+      <div class="robot-btn" data-robot="sensor">
+       <div>
+        🔍 Com Sensores
+       </div><small>Detecta obstáculos</small>
+      </div>
+      <div class="robot-btn" data-robot="advanced">
+       <div>
+        🚀 Avançado
+       </div><small>IA integrada</small>
+      </div>
+     </div>
+    </div><!-- Programação -->
+    <div class="panel">
+     <h3 class="panel-title" id="programmingTitle">💻 Programação</h3><textarea class="code-editor" id="codeEditor" placeholder="// Digite seus comandos aqui
+mover_frente(100);
+girar_direita(90);
+mover_frente(50);
+parar();"></textarea>
+     <div class="action-buttons"><button class="action-btn" onclick="addCommand('mover_frente(50);')">⬆️ Frente</button> <button class="action-btn" onclick="addCommand('mover_tras(50);')">⬇️ Trás</button> <button class="action-btn" onclick="addCommand('girar_esquerda(90);')">↪️ Esquerda</button> <button class="action-btn" onclick="addCommand('girar_direita(90);')">↩️ Direita</button> <button class="action-btn" onclick="addCommand('seguir_linha();')">🛤️ Seguir Linha</button> <button class="action-btn" onclick="addCommand('detectar_linha();')">👁️ Detectar Linha</button>
+     </div>
+     <div class="control-buttons"><button class="control-btn execute-btn" onclick="executeCode()">▶️ Executar Código</button> <button class="control-btn reset-btn" onclick="resetSimulation()">🔄 Reset</button>
+     </div>
+    </div>
+   </div><button class="back-button" id="backButton">⬅️ Voltar ao Menu</button>
+  </div>
+  <script>
+    const defaultConfig = {
+      title_text: "Simulador de Robótica",
+      subtitle_text: "Monte, programe e teste seu robô na arena virtual!",
+      obstacles_title: "🧱 Obstáculos",
+      robot_title: "🤖 Robô",
+      programming_title: "💻 Programação",
+      back_button_text: "⬅️ Voltar ao Menu",
+      font_family: "Segoe UI",
+      font_size: 16
+    };
+
+    let selectedObstacle = null;
+    let selectedRobot = 'basic';
+    let robotPosition = { x: 50, y: 50, angle: 0 };
+    let obstacles = [];
+    let isExecuting = false;
+
+    // Obstacle selection
+    document.querySelectorAll('.obstacle-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.obstacle-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedObstacle = btn.dataset.type;
+      });
+    });
+
+    // Robot selection
+    document.querySelectorAll('.robot-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.robot-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedRobot = btn.dataset.robot;
+        updateRobotAppearance();
+      });
+    });
+
+    // Arena click handler
+    document.getElementById('arena').addEventListener('click', (e) => {
+      if (selectedObstacle && !isExecuting) {
+        const rect = e.target.getBoundingClientRect();
+        const x = e.clientX - rect.left - 25; // Center the obstacle
+        const y = e.clientY - rect.top - 25;
+        
+        if (x > 0 && y > 0 && x < rect.width - 50 && y < rect.height - 50) {
+          addObstacle(selectedObstacle, x, y);
+        }
+      }
+    });
+
+    function addObstacle(type, x, y) {
+      const obstacle = document.createElement('div');
+      obstacle.className = `obstacle ${type}`;
+      obstacle.style.left = x + 'px';
+      obstacle.style.top = y + 'px';
+      obstacle.style.width = '50px';
+      obstacle.style.height = '50px';
+      
+      // Add click to remove
+      obstacle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!isExecuting) {
+          obstacle.remove();
+          obstacles = obstacles.filter(obs => obs.element !== obstacle);
+        }
+      });
+
+      document.getElementById('arena').appendChild(obstacle);
+      obstacles.push({ element: obstacle, type, x, y });
+    }
+
+    function clearObstacles() {
+      if (isExecuting) return;
+      
+      obstacles.forEach(obs => obs.element.remove());
+      obstacles = [];
+      showToast('Arena limpa!');
+    }
+
+    function updateRobotAppearance() {
+      const robot = document.getElementById('robot');
+      robot.className = 'robot';
+      
+      switch(selectedRobot) {
+        case 'basic':
+          robot.style.background = '#ef4444';
+          robot.style.borderColor = '#dc2626';
+          break;
+        case 'line-follower':
+          robot.style.background = '#f59e0b';
+          robot.style.borderColor = '#d97706';
+          break;
+        case 'sensor':
+          robot.style.background = '#3b82f6';
+          robot.style.borderColor = '#2563eb';
+          break;
+        case 'advanced':
+          robot.style.background = '#8b5cf6';
+          robot.style.borderColor = '#7c3aed';
+          break;
+      }
+    }
+
+    function addCommand(command) {
+      const editor = document.getElementById('codeEditor');
+      const currentCode = editor.value;
+      const newCode = currentCode ? currentCode + '\n' + command : command;
+      editor.value = newCode;
+    }
+
+    async function executeCode() {
+      if (isExecuting) return;
+      
+      isExecuting = true;
+      const code = document.getElementById('codeEditor').value;
+      const commands = code.split('\n').filter(line => line.trim());
+      
+      showToast('Executando código...');
+      
+      for (let command of commands) {
+        await executeCommand(command.trim());
+        await sleep(500); // Pause between commands
+      }
+      
+      isExecuting = false;
+      showToast('Execução concluída!');
+    }
+
+    async function executeCommand(command) {
+      const robot = document.getElementById('robot');
+      
+      if (command.includes('mover_frente')) {
+        const distance = extractNumber(command) || 50;
+        await moveRobot(distance, 0);
+      } else if (command.includes('mover_tras')) {
+        const distance = extractNumber(command) || 50;
+        await moveRobot(-distance, 0);
+      } else if (command.includes('girar_direita')) {
+        const angle = extractNumber(command) || 90;
+        robotPosition.angle += angle;
+        robot.style.transform = `rotate(${robotPosition.angle}deg)`;
+      } else if (command.includes('girar_esquerda')) {
+        const angle = extractNumber(command) || 90;
+        robotPosition.angle -= angle;
+        robot.style.transform = `rotate(${robotPosition.angle}deg)`;
+      } else if (command.includes('seguir_linha')) {
+        await followLine();
+      } else if (command.includes('detectar_linha')) {
+        const detected = detectLine();
+        showToast(detected ? 'Linha detectada!' : 'Nenhuma linha encontrada');
+      } else if (command.includes('parar')) {
+        await sleep(1000);
+      }
+    }
+
+    function detectLine() {
+      // Check if robot is over a line tile
+      const robotRect = {
+        x: robotPosition.x,
+        y: robotPosition.y,
+        width: 30,
+        height: 30
+      };
+
+      for (let obstacle of obstacles) {
+        if (obstacle.type.startsWith('line-')) {
+          const obstacleRect = {
+            x: obstacle.x,
+            y: obstacle.y,
+            width: 50,
+            height: 50
+          };
+
+          // Check if robot overlaps with line tile
+          if (robotRect.x < obstacleRect.x + obstacleRect.width &&
+              robotRect.x + robotRect.width > obstacleRect.x &&
+              robotRect.y < obstacleRect.y + obstacleRect.height &&
+              robotRect.y + robotRect.height > obstacleRect.y) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    async function followLine() {
+      if (selectedRobot !== 'line-follower') {
+        showToast('Apenas robôs seguidores de linha podem usar este comando!');
+        return;
+      }
+
+      // Simple line following simulation
+      for (let i = 0; i < 5; i++) {
+        if (detectLine()) {
+          await moveRobot(25, 0);
+          showToast('Seguindo linha...');
+        } else {
+          // Try to find line by turning
+          robotPosition.angle += 45;
+          const robot = document.getElementById('robot');
+          robot.style.transform = `rotate(${robotPosition.angle}deg)`;
+          showToast('Procurando linha...');
+        }
+        await sleep(500);
+      }
+    }
+
+    function extractNumber(command) {
+      const match = command.match(/\d+/);
+      return match ? parseInt(match[0]) : null;
+    }
+
+    async function moveRobot(deltaX, deltaY) {
+      const robot = document.getElementById('robot');
+      const arena = document.getElementById('arena');
+      const arenaRect = arena.getBoundingClientRect();
+      
+      // Calculate movement based on robot angle
+      const radians = (robotPosition.angle * Math.PI) / 180;
+      const moveX = deltaX * Math.cos(radians);
+      const moveY = deltaX * Math.sin(radians);
+      
+      const newX = Math.max(0, Math.min(arenaRect.width - 30, robotPosition.x + moveX));
+      const newY = Math.max(0, Math.min(arenaRect.height - 30, robotPosition.y + moveY));
+      
+      robotPosition.x = newX;
+      robotPosition.y = newY;
+      
+      robot.style.left = newX + 'px';
+      robot.style.top = newY + 'px';
+    }
+
+    function resetSimulation() {
+      if (isExecuting) return;
+      
+      robotPosition = { x: 50, y: 50, angle: 0 };
+      const robot = document.getElementById('robot');
+      robot.style.left = '50px';
+      robot.style.top = '50px';
+      robot.style.transform = 'rotate(0deg)';
+      
+      document.getElementById('codeEditor').value = '';
+      showToast('Simulação resetada!');
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function showToast(message) {
+      const toast = document.createElement('div');
+      toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(0,0,0,0.8);
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 10px;
+        z-index: 1000;
+        font-weight: bold;
+        backdrop-filter: blur(10px);
+        animation: slideIn 0.3s ease;
+      `;
+      toast.textContent = message;
+      
+      if (!document.querySelector('#toast-styles')) {
+        const style = document.createElement('style');
+        style.id = 'toast-styles';
+        style.textContent = `
+          @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+      
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    async function onConfigChange(config) {
+      const titleElement = document.getElementById('title');
+      const subtitleElement = document.getElementById('subtitle');
+      const obstaclesTitleElement = document.getElementById('obstaclesTitle');
+      const robotTitleElement = document.getElementById('robotTitle');
+      const programmingTitleElement = document.getElementById('programmingTitle');
+      const backButtonElement = document.getElementById('backButton');
+
+      titleElement.textContent = config.title_text || defaultConfig.title_text;
+      subtitleElement.textContent = config.subtitle_text || defaultConfig.subtitle_text;
+      obstaclesTitleElement.textContent = config.obstacles_title || defaultConfig.obstacles_title;
+      robotTitleElement.textContent = config.robot_title || defaultConfig.robot_title;
+      programmingTitleElement.textContent = config.programming_title || defaultConfig.programming_title;
+      backButtonElement.textContent = config.back_button_text || defaultConfig.back_button_text;
+
+      const customFont = config.font_family || defaultConfig.font_family;
+      const baseFontStack = 'Tahoma, Geneva, Verdana, sans-serif';
+      const fontFamily = `${customFont}, ${baseFontStack}`;
+      
+      document.body.style.fontFamily = fontFamily;
+
+      const baseSize = config.font_size || defaultConfig.font_size;
+      titleElement.style.fontSize = `${baseSize * 1.5625}px`;
+      subtitleElement.style.fontSize = `${baseSize * 0.6875}px`;
+      
+      const panelTitles = document.querySelectorAll('.panel-title');
+      panelTitles.forEach(el => {
+        el.style.fontSize = `${baseSize * 0.8125}px`;
+      });
+    }
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities: (config) => ({
+          recolorables: [],
+          borderables: [],
+          fontEditable: {
+            get: () => config.font_family || defaultConfig.font_family,
+            set: (value) => {
+              config.font_family = value;
+              window.elementSdk.setConfig({ font_family: value });
+            }
+          },
+          fontSizeable: {
+            get: () => config.font_size || defaultConfig.font_size,
+            set: (value) => {
+              config.font_size = value;
+              window.elementSdk.setConfig({ font_size: value });
+            }
+          }
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ["title_text", config.title_text || defaultConfig.title_text],
+          ["subtitle_text", config.subtitle_text || defaultConfig.subtitle_text],
+          ["obstacles_title", config.obstacles_title || defaultConfig.obstacles_title],
+          ["robot_title", config.robot_title || defaultConfig.robot_title],
+          ["programming_title", config.programming_title || defaultConfig.programming_title],
+          ["back_button_text", config.back_button_text || defaultConfig.back_button_text]
+        ])
+      });
+    }
+
+    // Initialize
+    updateRobotAppearance();
+
+    document.getElementById('backButton').addEventListener('click', () => {
+      showToast('Voltando ao menu principal...');
+    });
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99a8730cc6a36f91',t:'MTc2MjQ3MjU2OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
